@@ -1,0 +1,49 @@
+/* 
+  Allow angular.js to be loaded in body, hiding cloaked elements until 
+  templates compile.  The !important is important given that there may be 
+  other selectors that are more specific or come later and might alter display.  
+ */
+[ng\:cloak], [ng-cloak], .ng-cloak {
+  display: none !important;
+}
+
+.table-list tr {
+	height: 48px !important;
+}
+
+.table-list tr td div.manage-link {
+    display: none;
+}
+
+.table-list tr:hover td div.manage-link {
+    display: block;
+}
+
+.text-vertical-center{
+	vertical-align:middle !important;
+}
+
+.strikethrough {
+  text-decoration: line-through;
+}
+
+.cursor-pointer{
+	cursor: pointer;
+}
+
+.toggle-icon {
+    vertical-align: middle;
+    font-size: 18px !important;
+}
+.toggle-container {
+    padding-top: 10px !important;
+    display: inline-block;
+}
+
+.loading-bg{  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate3d(-50%,-50%,0);
+}
+
+.datepicker{z-index:9999 !important}
