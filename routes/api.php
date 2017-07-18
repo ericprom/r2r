@@ -21,6 +21,7 @@ $api->version('v1', function ($api) {
 		$api->get('auth/getByToken', 'App\Api\V1\Controllers\AuthController@getByToken');
 
 		$api->group(['middleware' => ['jwt.auth']], function ($api) {
+			$api->resource('annoucements', 'App\Api\V1\Controllers\AnnoucementController');
 			$api->resource('researches', 'App\Api\V1\Controllers\ResearchController');
 			$api->resource('seminars', 'App\Api\V1\Controllers\SeminarController');
 			$api->resource('users', 'App\Api\V1\Controllers\UserController');

@@ -73059,6 +73059,46 @@ app.controller('MainController', ['$timeout', '$scope', '$location', '$localStor
   }
 ]);
 
+app.controller('DashboardController', ['$scope', '$location', 'Auth', 'Utils', 'Annoucement', 'toastr', 
+	function ($scope, $location, Auth, Utils, Annoucement, toastr) {
+
+	$scope.currentPage = 1;
+	$scope.numPerPage = 3;
+	$scope.maxSize = 5;
+
+	$scope.dataLists = {
+		annoucements:[]
+	};
+
+	$scope.fields = {};
+
+	$scope.keyword = '';
+	$scope.loadData = function(){
+		$scope.fields = {}
+		$scope.$watch('currentPage + numPerPage', function() {
+			var begin = (($scope.currentPage - 1) * $scope.numPerPage);
+			var end = $scope.numPerPage;
+			var criteria = {skip:begin, limit:end, keyword:$scope.keyword};
+			Annoucement.getItems(criteria, function(response){
+				$scope.dataLists.annoucements = response;
+				$scope.total = response.resultmeta.total;
+			}, function(error){
+				console.log(error);
+			});
+		});
+	}
+
+  	$scope.numPages = function () {
+    	return Math.ceil($scope.total / $scope.numPerPage);
+  	};
+
+	if(!Auth.checkIfLoggedIn()){
+		$location.path('/auth/login');
+	}
+
+	$scope.loadData();
+
+}]);
 app.controller('AdminAreaController', ['$scope', '$location', 'Auth', 
 	function ($scope, $location, Auth) {
 
@@ -73682,166 +73722,6 @@ app.controller('ReportSeminarsController', ['$scope', '$location', 'Auth', 'Util
 	}
 
 }]);
-app.controller('SettingsAccountController', ['$http','$http', '$scope', '$location', 'Auth', 'User', 'toastr', 
-	function ($http, $http, $scope, $location, Auth, User, toastr) {
-
-	$scope.fields = {
-		user : $scope.authenticatedUser
-	}
-
-	$scope.image_source = $scope.fields.user.avatar;
-
-	$scope.change = function(){
-		document.getElementById('formImage').click();
-	}
-
-	$scope.upload = function(element) {
-      	$http({
-		  method  : 'POST',
-		  url     : '/api/v1/upload/avatar',
-		  processData: false,
-		  transformRequest: function (data) {
-		      var formData = new FormData();
-		      formData.append("avatar", element.files[0]);  
-		      return formData;  
-		  },  
-		  headers: {
-		        'Content-Type': undefined
-		  }
-	   }).then(function(data){
-	        console.log(data);
-	   });
-
-    };
-
-    $scope.uploaded = function(element) {
-	    var reader = new FileReader();
-
-	    reader.onload = function(event) {
-	      	$scope.image_source = event.target.result
-	    }
-     	reader.readAsDataURL(element.files[0]);
-     	$scope.upload(element);
-	}
-
-	$scope.update = function(){
-		if($scope.fields.user.password && $scope.fields.user.password != $scope.fields.user.password2){
-			toastr.warning('กรุณายืนยันรหัสผ่าน', 'User Settings');
-			return;
-		}
-		User.update($scope.fields.user.id, $scope.fields, function(response){
-			toastr.success('บันทึกข้อมูลสำเร็จ', 'User Settings');
-		}, function(error){
-			console.log('error',error);
-		});
-	}
-
-	if(!Auth.checkIfLoggedIn()){
-		$location.path('/auth/login');
-	}
-
-}]);
-app.controller('SettingsUsersController', ['$scope', '$location', 'Auth', 'Role', 'User', 'toastr', 
-	function ($scope, $location, Auth, Role, User, toastr) {
-
-	$scope.currentPage = 1;
-	$scope.numPerPage = 10;
-	$scope.maxSize = 5;
-
-	$scope.dataLists = {
-		users:[],
-		roles:[]
-	};
-
-	$scope.fields = {};
-
-	Role.getItems(function(response){
-		$scope.dataLists.roles = response;
-	}, function(error){
-		console.log(error);
-	});
-
-	$scope.keyword = '';
-	$scope.loadData = function(){
-		$scope.fields = {}
-		$scope.$watch('currentPage + numPerPage', function() {
-			var begin = (($scope.currentPage - 1) * $scope.numPerPage);
-			var end = $scope.numPerPage;
-			var criteria = {skip:begin, limit:end, keyword:$scope.keyword};
-			User.getItems(criteria, function(response){
-				$scope.dataLists.users = response;
-				$scope.total = response.resultmeta.total;
-			}, function(error){
-				console.log(error);
-			});
-		});
-	}
-
-  	$scope.numPages = function () {
-    	return Math.ceil($scope.total / $scope.numPerPage);
-  	};
-	
-	$scope.search = function(keyword){
-		$scope.keyword = keyword;
-		$scope.loadData();
-	}
-	
-	$scope.toggleStatus = function(item){
-		if(item.active){
-			item.active = false;
-		}
-		else{
-			item.active = true;
-		}
-	}
-
-	$scope.Remove = function (list, item) {
-	    var index = list.indexOf(item);
-	    list.splice(index, 1);
-	};
-
-	$scope.add = function(){
-		$scope.fields = {};
-		$('#manageUserModal').modal('toggle');
-	}
-
-	$scope.edit = function(user){
-		$scope.fields.user = user;
-		$scope.fields.roles = user.roles.map(function(item) {
-		    return item['id'];
-		});
-		$('#manageUserModal').modal('toggle');
-	}
-
-	$scope.save = function(){
-		if($scope.fields.user.id){
-			$scope.fields.action = 'update_user';
-			User.update($scope.fields.user.id, $scope.fields, function(response){
-				toastr.success('บันทึกข้อมูลสำเร็จ', 'User Settings');
-			}, function(error){
-				console.log('error',error);
-			});
-		}
-		else{
-			User.save($scope.fields, function(response){
-				toastr.success('บันทึกข้อมูลสำเร็จ', 'User Settings');
-				$scope.loadData();
-			}, function(error){
-				console.log(error);
-			});
-		}
-
-		$('#manageUserModal').modal('toggle');
-		$scope.loadData();
-	}
-
-	if(!Auth.checkIfLoggedIn()){
-		$location.path('/auth/login');
-	}
-
-	$scope.search();
-
-}]);
 app.controller('ResearchEditController', ['$routeParams', '$scope', '$location', 'Auth', 'Research', 'toastr', 
 	function ($routeParams, $scope, $location, Auth, Research, toastr) {
 
@@ -74374,6 +74254,324 @@ app.controller('SeminarNewController', ['$http','$http', '$scope', '$location', 
 	}
 
 	$scope.currentSeminarReset();
+
+}]);
+app.controller('SettingsAccountController', ['$http','$http', '$scope', '$location', 'Auth', 'User', 'toastr', 
+	function ($http, $http, $scope, $location, Auth, User, toastr) {
+
+	$scope.fields = {
+		user : $scope.authenticatedUser
+	}
+
+	$scope.image_source = $scope.fields.user.avatar;
+
+	$scope.change = function(){
+		document.getElementById('formImage').click();
+	}
+
+	$scope.upload = function(element) {
+      	$http({
+		  method  : 'POST',
+		  url     : '/api/v1/upload/avatar',
+		  processData: false,
+		  transformRequest: function (data) {
+		      var formData = new FormData();
+		      formData.append("avatar", element.files[0]);  
+		      return formData;  
+		  },  
+		  headers: {
+		        'Content-Type': undefined
+		  }
+	   }).then(function(data){
+	        console.log(data);
+	   });
+
+    };
+
+    $scope.uploaded = function(element) {
+	    var reader = new FileReader();
+
+	    reader.onload = function(event) {
+	      	$scope.image_source = event.target.result
+	    }
+     	reader.readAsDataURL(element.files[0]);
+     	$scope.upload(element);
+	}
+
+	$scope.update = function(){
+		if($scope.fields.user.password && $scope.fields.user.password != $scope.fields.user.password2){
+			toastr.warning('กรุณายืนยันรหัสผ่าน', 'User Settings');
+			return;
+		}
+		User.update($scope.fields.user.id, $scope.fields, function(response){
+			toastr.success('บันทึกข้อมูลสำเร็จ', 'User Settings');
+		}, function(error){
+			console.log('error',error);
+		});
+	}
+
+	if(!Auth.checkIfLoggedIn()){
+		$location.path('/auth/login');
+	}
+
+}]);
+app.controller('AnnoucementsController', ['$scope', '$location', 'Auth', 'Utils', 'Annoucement', 'toastr', 
+	function ($scope, $location, Auth, Utils, Annoucement, toastr) {
+
+	$scope.currentPage = 1;
+	$scope.numPerPage = 10;
+	$scope.maxSize = 5;
+
+	$scope.dataLists = {
+		annoucements:[]
+	};
+
+	$scope.fields = {};
+
+	$scope.keyword = '';
+	$scope.loadData = function(){
+		$scope.fields = {}
+		$scope.$watch('currentPage + numPerPage', function() {
+			var begin = (($scope.currentPage - 1) * $scope.numPerPage);
+			var end = $scope.numPerPage;
+			var criteria = {skip:begin, limit:end, keyword:$scope.keyword};
+			Annoucement.getItems(criteria, function(response){
+				$scope.dataLists.annoucements = response;
+				$scope.total = response.resultmeta.total;
+			}, function(error){
+				console.log(error);
+			});
+		});
+	}
+
+  	$scope.numPages = function () {
+    	return Math.ceil($scope.total / $scope.numPerPage);
+  	};
+
+  	$scope.toggleStatus = function(item){
+		if(item.active){
+			item.active = false;
+		}
+		else{
+			item.active = true;
+		}
+	}
+
+  	$scope.search = function(keyword){
+		$scope.keyword = keyword;
+		$scope.loadData();
+	}
+
+	
+	$scope.Remove = function (list, item) {
+	    var index = list.indexOf(item);
+	    list.splice(index, 1);
+	};
+
+	$scope.add = function(){
+		$scope.fields = {};
+		$('#manageAnnoucementModal').modal('toggle');
+	}
+	
+	$scope.edit = function(item){
+		$scope.fields.annoucement = item;
+		$('#manageAnnoucementModal').modal('toggle');
+	}
+
+	$scope.save = function(){
+		if($scope.fields.annoucement.id){
+			Annoucement.update($scope.fields.annoucement.id, $scope.fields, function(response){
+				toastr.success('บันทึกข้อมูลสำเร็จ', 'Annoucement Settings');
+			}, function(error){
+				console.log('error',error);
+			});
+		}
+		else{
+			Annoucement.save($scope.fields, function(response){
+				toastr.success('บันทึกข้อมูลสำเร็จ', 'Annoucement Settings');
+				$scope.loadData();
+			}, function(error){
+				console.log(error);
+			});
+		}
+
+		$('#manageAnnoucementModal').modal('toggle');
+		$scope.loadData();
+	}
+
+	if(!Auth.checkIfLoggedIn()){
+		$location.path('/auth/login');
+	}
+
+	$scope.search();
+
+}]);
+app.controller('SettingsUsersController', ['$scope', '$location', 'Auth', 'Role', 'User', 'toastr', 
+	function ($scope, $location, Auth, Role, User, toastr) {
+
+	$scope.currentPage = 1;
+	$scope.numPerPage = 10;
+	$scope.maxSize = 5;
+
+	$scope.dataLists = {
+		users:[],
+		roles:[]
+	};
+
+	$scope.fields = {};
+
+	Role.getItems(function(response){
+		$scope.dataLists.roles = response;
+	}, function(error){
+		console.log(error);
+	});
+
+	$scope.keyword = '';
+	$scope.loadData = function(){
+		$scope.fields = {}
+		$scope.$watch('currentPage + numPerPage', function() {
+			var begin = (($scope.currentPage - 1) * $scope.numPerPage);
+			var end = $scope.numPerPage;
+			var criteria = {skip:begin, limit:end, keyword:$scope.keyword};
+			User.getItems(criteria, function(response){
+				$scope.dataLists.users = response;
+				$scope.total = response.resultmeta.total;
+			}, function(error){
+				console.log(error);
+			});
+		});
+	}
+
+  	$scope.numPages = function () {
+    	return Math.ceil($scope.total / $scope.numPerPage);
+  	};
+	
+	$scope.search = function(keyword){
+		$scope.keyword = keyword;
+		$scope.loadData();
+	}
+	
+	$scope.toggleStatus = function(item){
+		if(item.active){
+			item.active = false;
+		}
+		else{
+			item.active = true;
+		}
+	}
+
+	$scope.Remove = function (list, item) {
+	    var index = list.indexOf(item);
+	    list.splice(index, 1);
+	};
+
+	$scope.add = function(){
+		$scope.fields = {};
+		$('#manageUserModal').modal('toggle');
+	}
+
+	$scope.edit = function(user){
+		$scope.fields.user = user;
+		$scope.fields.roles = user.roles.map(function(item) {
+		    return item['id'];
+		});
+		$('#manageUserModal').modal('toggle');
+	}
+
+	$scope.save = function(){
+		if($scope.fields.user.id){
+			$scope.fields.action = 'update_user';
+			User.update($scope.fields.user.id, $scope.fields, function(response){
+				toastr.success('บันทึกข้อมูลสำเร็จ', 'User Settings');
+			}, function(error){
+				console.log('error',error);
+			});
+		}
+		else{
+			User.save($scope.fields, function(response){
+				toastr.success('บันทึกข้อมูลสำเร็จ', 'User Settings');
+				$scope.loadData();
+			}, function(error){
+				console.log(error);
+			});
+		}
+
+		$('#manageUserModal').modal('toggle');
+		$scope.loadData();
+	}
+
+	if(!Auth.checkIfLoggedIn()){
+		$location.path('/auth/login');
+	}
+
+	$scope.search();
+
+}]);
+app.factory('Annoucement', ['Restangular', 'Auth', function(Restangular, Auth) {
+  
+  function getItems(criteria, onSuccess, onError){
+    Restangular.all('annoucements').getList(criteria).then(function(response){
+
+      onSuccess(response);
+    
+    }, function(response){
+
+      onError(response);
+
+    });
+  }
+
+  function getItem(itemId, onSuccess, onError){
+
+    Restangular.one('annoucements', itemId).get().then(function(response){
+
+      onSuccess(response);
+
+    }, function(response){
+
+      onError(response);
+
+    });
+
+  }
+
+  function save(data, onSuccess, onError){
+
+    Restangular.all('annoucements').post(data).then(function(response){
+
+      onSuccess(response);
+    
+    }, function(response){
+      
+      onError(response);
+    
+    });
+
+  }
+
+  function update(itemId, data, onSuccess, onError){
+
+    Restangular.one("annoucements").customPUT(data, itemId).then(function(response) {
+        
+        onSuccess(response);
+
+      }, function(response){
+        
+        onError(response);
+      
+      }
+    );
+
+  }
+
+  Restangular.setDefaultHeaders({ 'Authorization' : 'Bearer ' + Auth.getCurrentToken() });
+
+  return {
+    getItems: getItems,
+    getItem:getItem,
+    save:save,
+    update:update
+  }
 
 }]);
 app.factory('Auth', ['$timeout', '$http', '$localStorage', 'Restangular', function($timeout, $http, $localStorage, Restangular) {
@@ -75014,44 +75212,6 @@ app.directive('format', ['$filter', function ($filter) {
     };
 }]);
 
-app.directive('pdfDownload', ['$filter', function ($filter) {
-    return {
-        restrict: 'E',
-        template: '<a href="" class="btn btn-primary" ng-click="downloadPdf()">Download</a>',
-        scope: true,
-        link: function(scope, element, attr) {
-            var anchor = element.children()[0];
- 
-            // When the download starts, disable the link
-            scope.$on('download-start', function() {
-                $(anchor).attr('disabled', 'disabled');
-            });
-
-            scope.$on('downloaded', function(event, data) {
-                $(anchor).attr({
-                    href: 'data:application/pdf;base64,' + data,
-                    download: attr.filename
-                })
-                    .removeAttr('disabled')
-                    .text('Save')
-                    .removeClass('btn-primary')
-                    .addClass('btn-success');
- 
-                // Also overwrite the download pdf function to do nothing.
-                scope.downloadPdf = function() {
-                };
-            });
-        },
-        controller: ['$scope', '$attrs', '$http', function($scope, $attrs, $http) {
-            $scope.downloadPdf = function() {
-                $scope.$emit('download-start');
-                $http.get($attrs.url).then(function(response) {
-                    $scope.$emit('downloaded', response.data);
-                });
-            };
-        }] 
-    }
-}]);
 app.directive('setBoxHeight', ['$window', function($window){
   return{
     link: function(scope, element, attrs){

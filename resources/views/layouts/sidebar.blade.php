@@ -83,6 +83,9 @@
             <li ng-class="{active:isActive('/settings/users')}">
                 <a href="{!! url('/settings/users'); !!}"><i class="fa fa-user-circle-o"></i> <span>จัดการพนักงาน</span></a>
             </li>
+            <li ng-class="{active:isActive('/settings/annoucements')}">
+                <a href="{!! url('/settings/annoucements'); !!}"><i class="fa fa-bullhorn"></i> <span>ข่าวประชาสัมพันธ์</span></a>
+            </li>
             @endrole
             <li ng-class="{active:isActive('/settings/account')}">
                 <a href="{!! url('/settings/account'); !!}"><i class="fa fa-cog"></i> <span>จัดการบัญชีผู้ใช้</span></a>
