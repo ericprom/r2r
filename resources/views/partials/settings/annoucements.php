@@ -18,7 +18,7 @@
             <h3 class="box-title"><i class="fa fa-bullhorn"></i> ข่าวประชาสัมพันธ์</h3>
 
             <div class="box-tools">
-              <span data-toggle="tooltip" title="มีทั้งหมด {{total}} ข่าวประชาสัมพันธ์" class="badge bg-light-blue">{{total}}</span>
+              <span data-toggle="tooltip" title="มีข่าวประชาสัมพันธ์ทั้งหมด {{total}} เรื่อง" class="badge bg-light-blue">{{total}}</span>
             </div>
           </div>
           <div class="box-body table-responsive no-padding">
