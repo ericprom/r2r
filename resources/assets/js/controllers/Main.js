@@ -1,5 +1,5 @@
-app.controller('MainController', ['$timeout', '$scope', '$location', '$localStorage','Auth',
-  function ($timeout, $scope, $location, $localStorage,Auth) {
+app.controller('MainController', ['$timeout', '$scope', '$location', '$localStorage', 'Auth',
+  function ($timeout, $scope, $location, $localStorage, Auth) {
   
     $timeout(function(){
       $(window).trigger('resize');

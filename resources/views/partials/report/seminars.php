@@ -57,7 +57,7 @@
           <div class="box-header with-border">
             <h3 class="box-title"><i class="fa fa-list"></i> รายงาน</h3>
             <div class="box-tools">
-              <!-- <button type="button" class="btn btn-default btn-sm" ng-click="export()"><i class="fa fa-print"></i></button> -->
+              <span data-toggle="tooltip" title="มีงานอบรมสัมนาทั้งหมด {{total}} หัวข้อ" class="badge bg-light-blue">{{total}}</span>
             </div>
           </div>
           <div class="box-body no-padding">

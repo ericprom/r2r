@@ -18,13 +18,7 @@
             <h3 class="box-title"><i class="fa fa-bullhorn"></i> ข่าวประชาสัมพันธ์</h3>
 
             <div class="box-tools">
-              <div class="input-group input-group-sm" style="width: 200px;">
-                <input type="text" name="table_search" class="form-control pull-right" ng-model="searchKeyword">
-
-                <div class="input-group-btn">
-                  <button type="button" class="btn btn-default" ng-click="search(searchKeyword)"><i class="fa fa-search"></i></button>
-                </div>
-              </div>
+              <span data-toggle="tooltip" title="มีทั้งหมด {{total}} ข่าวประชาสัมพันธ์" class="badge bg-light-blue">{{total}}</span>
             </div>
           </div>
           <div class="box-body table-responsive no-padding">
