@@ -18,12 +18,13 @@ app.controller('AdminUsersController', ['$scope', '$location', 'Auth', 'Role', '
 		console.log(error);
 	});
 
-	$scope.currentUsersReset = function(){
+	$scope.keyword = '';
+	$scope.loadData = function(){
 		$scope.fields = {}
 		$scope.$watch('currentPage + numPerPage', function() {
 			var begin = (($scope.currentPage - 1) * $scope.numPerPage);
 			var end = $scope.numPerPage;
-			var criteria = {skip:begin, limit:end};
+			var criteria = {skip:begin, limit:end, keyword:$scope.keyword};
 			User.getItems(criteria, function(response){
 				$scope.dataLists.users = response;
 				$scope.total = response.resultmeta.total;
@@ -36,6 +37,11 @@ app.controller('AdminUsersController', ['$scope', '$location', 'Auth', 'Role', '
   	$scope.numPages = function () {
     	return Math.ceil($scope.total / $scope.numPerPage);
   	};
+	
+	$scope.search = function(keyword){
+		$scope.keyword = keyword;
+		$scope.loadData();
+	}
 	
 	$scope.toggleStatus = function(item){
 		if(item.active){
@@ -76,20 +82,20 @@ app.controller('AdminUsersController', ['$scope', '$location', 'Auth', 'Role', '
 		else{
 			User.save($scope.fields, function(response){
 				toastr.success('บันทึกข้อมูลสำเร็จ', 'User Settings');
-				$scope.currentUsersReset();
+				$scope.loadData();
 			}, function(error){
 				console.log(error);
 			});
 		}
 
 		$('#manageUserModal').modal('toggle');
-		$scope.currentUsersReset();
+		$scope.loadData();
 	}
 
 	if(!Auth.checkIfLoggedIn()){
 		$location.path('/auth/login');
 	}
 
-	$scope.currentUsersReset();
+	$scope.search();
 
 }]);

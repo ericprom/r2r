@@ -16,6 +16,15 @@
         <div class="box box-primary">
           <div class="box-header">
             <h3 class="box-title"><i class="fa fa-user-circle-o"></i> รายชื่อผู้ใช้งาน</h3>
+            <div class="box-tools">
+              <div class="input-group input-group-sm" style="width: 200px;">
+                <input type="text" name="table_search" class="form-control pull-right" ng-model="searchKeyword">
+
+                <div class="input-group-btn">
+                  <button type="button" class="btn btn-default" ng-click="search(searchKeyword)"><i class="fa fa-search"></i></button>
+                </div>
+              </div>
+            </div>
           </div>
           <div class="box-body table-responsive no-padding">
             <div set-box-height>
