@@ -11,10 +11,20 @@ app.controller('ReportOfficersController', ['$scope', '$location', 'Auth', 'Util
 	        { id: 'yesterday', name: 'Yesterday' },
 	        { id: 'today', name: 'Today' },
 	        { id: 'custom', name: 'Custom' }
-	    ]
+	    ],
+	    status: [
+		    { id:0, name:'โสด' },
+			{ id:1, name:'แต่งงาน' },
+			{ id:2, name:'หย่าร้าง' }
+		],
+		genders:[
+			{ id:0, name:'หญิง' },
+			{ id:1, name:'ชาย' }
+		]
 	};
-
+	
 	$scope.fields = {
+		officer:{},
 		timer: $scope.dataLists.timers[1],
 		start: Utils.displayDate(moment().startOf('day')),
 		end: Utils.displayDate(moment().endOf('day'))
@@ -64,10 +74,46 @@ app.controller('ReportOfficersController', ['$scope', '$location', 'Auth', 'Util
 		$scope.loadData();
 	}
 
-	$scope.loadData();
+	$scope.getStatus = function(data){
+		var status = 'ไม่ระบุ';
+		switch(data){
+			case 0:
+				status = 'โสด';
+				break;
+			case 1:
+				status = 'แต่งงาน';
+				break;
+			case 2:
+				status = 'หย่าร้าง';
+				break;
+		}
+		return status;
+	}
+	$scope.getGender = function(data){
+		var status = 'ไม่ระบุ';
+		switch(data){
+			case 0:
+				status = 'หญิง';
+				break;
+			case 1:
+				status = 'ชาย';
+				break;
+		}
+		return status;
+	}
+
+	$scope.view = function(item){
+		$scope.fields.officer.user = item;
+		$scope.fields.officer.info = item.info;
+		$scope.fields.officer.work = item.work;
+		$scope.fields.officer.edu = item.edu;
+		$('#viewOfficerModal').modal('toggle');
+	}
 
 	if(!Auth.checkIfLoggedIn()){
 		$location.path('/auth/login');
 	}
+
+	$scope.loadData();
 
 }]);

@@ -73499,10 +73499,20 @@ app.controller('ReportOfficersController', ['$scope', '$location', 'Auth', 'Util
 	        { id: 'yesterday', name: 'Yesterday' },
 	        { id: 'today', name: 'Today' },
 	        { id: 'custom', name: 'Custom' }
-	    ]
+	    ],
+	    status: [
+		    { id:0, name:'โสด' },
+			{ id:1, name:'แต่งงาน' },
+			{ id:2, name:'หย่าร้าง' }
+		],
+		genders:[
+			{ id:0, name:'หญิง' },
+			{ id:1, name:'ชาย' }
+		]
 	};
-
+	
 	$scope.fields = {
+		officer:{},
 		timer: $scope.dataLists.timers[1],
 		start: Utils.displayDate(moment().startOf('day')),
 		end: Utils.displayDate(moment().endOf('day'))
@@ -73552,11 +73562,47 @@ app.controller('ReportOfficersController', ['$scope', '$location', 'Auth', 'Util
 		$scope.loadData();
 	}
 
-	$scope.loadData();
+	$scope.getStatus = function(data){
+		var status = 'ไม่ระบุ';
+		switch(data){
+			case 0:
+				status = 'โสด';
+				break;
+			case 1:
+				status = 'แต่งงาน';
+				break;
+			case 2:
+				status = 'หย่าร้าง';
+				break;
+		}
+		return status;
+	}
+	$scope.getGender = function(data){
+		var status = 'ไม่ระบุ';
+		switch(data){
+			case 0:
+				status = 'หญิง';
+				break;
+			case 1:
+				status = 'ชาย';
+				break;
+		}
+		return status;
+	}
+
+	$scope.view = function(item){
+		$scope.fields.officer.user = item;
+		$scope.fields.officer.info = item.info;
+		$scope.fields.officer.work = item.work;
+		$scope.fields.officer.edu = item.edu;
+		$('#viewOfficerModal').modal('toggle');
+	}
 
 	if(!Auth.checkIfLoggedIn()){
 		$location.path('/auth/login');
 	}
+
+	$scope.loadData();
 
 }]);
 app.controller('ReportResearchesController', ['$scope', '$location', 'Auth', 'Utils', 'Report' ,'toastr', 
@@ -73726,6 +73772,257 @@ app.controller('ReportSeminarsController', ['$scope', '$location', 'Auth', 'Util
 	if(!Auth.checkIfLoggedIn()){
 		$location.path('/auth/login');
 	}
+
+}]);
+app.controller('SettingsAccountController', ['$http','$http', '$scope', '$location', 'Auth', 'User', 'toastr', 
+	function ($http, $http, $scope, $location, Auth, User, toastr) {
+
+	$scope.fields = {
+		user : $scope.authenticatedUser
+	}
+
+	$scope.image_source = $scope.fields.user.avatar;
+
+	$scope.change = function(){
+		document.getElementById('formImage').click();
+	}
+
+	$scope.upload = function(element) {
+      	$http({
+		  method  : 'POST',
+		  url     : '/api/v1/upload/avatar',
+		  processData: false,
+		  transformRequest: function (data) {
+		      var formData = new FormData();
+		      formData.append("avatar", element.files[0]);  
+		      return formData;  
+		  },  
+		  headers: {
+		        'Content-Type': undefined
+		  }
+	   }).then(function(data){
+	        console.log(data);
+	   });
+
+    };
+
+    $scope.uploaded = function(element) {
+	    var reader = new FileReader();
+
+	    reader.onload = function(event) {
+	      	$scope.image_source = event.target.result
+	    }
+     	reader.readAsDataURL(element.files[0]);
+     	$scope.upload(element);
+	}
+
+	$scope.update = function(){
+		if($scope.fields.user.password && $scope.fields.user.password != $scope.fields.user.password2){
+			toastr.warning('กรุณายืนยันรหัสผ่าน', 'User Settings');
+			return;
+		}
+		User.update($scope.fields.user.id, $scope.fields, function(response){
+			toastr.success('บันทึกข้อมูลสำเร็จ', 'User Settings');
+		}, function(error){
+			console.log('error',error);
+		});
+	}
+
+	if(!Auth.checkIfLoggedIn()){
+		$location.path('/auth/login');
+	}
+
+}]);
+app.controller('AnnoucementsController', ['$scope', '$location', 'Auth', 'Utils', 'Annoucement', 'toastr', 
+	function ($scope, $location, Auth, Utils, Annoucement, toastr) {
+
+	$scope.currentPage = 1;
+	$scope.numPerPage = 10;
+	$scope.maxSize = 5;
+
+	$scope.dataLists = {
+		annoucements:[]
+	};
+
+	$scope.fields = {};
+
+	$scope.keyword = '';
+	$scope.loadData = function(){
+		$scope.fields = {}
+		$scope.$watch('currentPage + numPerPage', function() {
+			var begin = (($scope.currentPage - 1) * $scope.numPerPage);
+			var end = $scope.numPerPage;
+			var criteria = {skip:begin, limit:end, keyword:$scope.keyword};
+			Annoucement.getItems(criteria, function(response){
+				$scope.dataLists.annoucements = response;
+				$scope.total = response.resultmeta.total;
+			}, function(error){
+				console.log(error);
+			});
+		});
+	}
+
+  	$scope.numPages = function () {
+    	return Math.ceil($scope.total / $scope.numPerPage);
+  	};
+
+  	$scope.toggleStatus = function(item){
+		if(item.active){
+			item.active = false;
+		}
+		else{
+			item.active = true;
+		}
+	}
+
+  	$scope.search = function(keyword){
+		$scope.keyword = keyword;
+		$scope.loadData();
+	}
+
+	
+	$scope.Remove = function (list, item) {
+	    var index = list.indexOf(item);
+	    list.splice(index, 1);
+	};
+
+	$scope.add = function(){
+		$scope.fields = {};
+		$('#manageAnnoucementModal').modal('toggle');
+	}
+	
+	$scope.edit = function(item){
+		$scope.fields.annoucement = item;
+		$('#manageAnnoucementModal').modal('toggle');
+	}
+
+	$scope.save = function(){
+		if($scope.fields.annoucement.id){
+			Annoucement.update($scope.fields.annoucement.id, $scope.fields, function(response){
+				toastr.success('บันทึกข้อมูลสำเร็จ', 'Annoucement Update');
+				$scope.loadData();
+			}, function(error){
+				console.log('error',error);
+			});
+		}
+		else{
+			Annoucement.save($scope.fields, function(response){
+				toastr.success('บันทึกข้อมูลสำเร็จ', 'Annoucement Settings');
+				$scope.loadData();
+			}, function(error){
+				console.log(error);
+			});
+		}
+
+		$('#manageAnnoucementModal').modal('toggle');
+	}
+
+	if(!Auth.checkIfLoggedIn()){
+		$location.path('/auth/login');
+	}
+
+	$scope.search();
+
+}]);
+app.controller('SettingsUsersController', ['$scope', '$location', 'Auth', 'Role', 'User', 'toastr', 
+	function ($scope, $location, Auth, Role, User, toastr) {
+
+	$scope.currentPage = 1;
+	$scope.numPerPage = 10;
+	$scope.maxSize = 5;
+
+	$scope.dataLists = {
+		users:[],
+		roles:[]
+	};
+
+	$scope.fields = {};
+
+	Role.getItems(function(response){
+		$scope.dataLists.roles = response;
+	}, function(error){
+		console.log(error);
+	});
+
+	$scope.keyword = '';
+	$scope.loadData = function(){
+		$scope.fields = {}
+		$scope.$watch('currentPage + numPerPage', function() {
+			var begin = (($scope.currentPage - 1) * $scope.numPerPage);
+			var end = $scope.numPerPage;
+			var criteria = {skip:begin, limit:end, keyword:$scope.keyword};
+			User.getItems(criteria, function(response){
+				$scope.dataLists.users = response;
+				$scope.total = response.resultmeta.total;
+			}, function(error){
+				console.log(error);
+			});
+		});
+	}
+
+  	$scope.numPages = function () {
+    	return Math.ceil($scope.total / $scope.numPerPage);
+  	};
+	
+	$scope.search = function(keyword){
+		$scope.keyword = keyword;
+		$scope.loadData();
+	}
+	
+	$scope.toggleStatus = function(item){
+		if(item.active){
+			item.active = false;
+		}
+		else{
+			item.active = true;
+		}
+	}
+
+	$scope.Remove = function (list, item) {
+	    var index = list.indexOf(item);
+	    list.splice(index, 1);
+	};
+
+	$scope.add = function(){
+		$scope.fields = {};
+		$('#manageUserModal').modal('toggle');
+	}
+
+	$scope.edit = function(user){
+		$scope.fields.user = user;
+		$scope.fields.roles = user.roles.map(function(item) {
+		    return item['id'];
+		});
+		$('#manageUserModal').modal('toggle');
+	}
+
+	$scope.save = function(){
+		if($scope.fields.user.id){
+			$scope.fields.action = 'update_user';
+			User.update($scope.fields.user.id, $scope.fields, function(response){
+				toastr.success('บันทึกข้อมูลสำเร็จ', 'User Settings');
+			}, function(error){
+				console.log('error',error);
+			});
+		}
+		else{
+			User.save($scope.fields, function(response){
+				toastr.success('บันทึกข้อมูลสำเร็จ', 'User Settings');
+				$scope.loadData();
+			}, function(error){
+				console.log(error);
+			});
+		}
+
+		$('#manageUserModal').modal('toggle');
+		$scope.loadData();
+	}
+
+	if(!Auth.checkIfLoggedIn()){
+		$location.path('/auth/login');
+	}
+
+	$scope.search();
 
 }]);
 app.controller('ResearchEditController', ['$routeParams', '$scope', '$location', 'Auth', 'Research', 'toastr', 
@@ -74260,257 +74557,6 @@ app.controller('SeminarNewController', ['$http','$http', '$scope', '$location', 
 	}
 
 	$scope.currentSeminarReset();
-
-}]);
-app.controller('SettingsAccountController', ['$http','$http', '$scope', '$location', 'Auth', 'User', 'toastr', 
-	function ($http, $http, $scope, $location, Auth, User, toastr) {
-
-	$scope.fields = {
-		user : $scope.authenticatedUser
-	}
-
-	$scope.image_source = $scope.fields.user.avatar;
-
-	$scope.change = function(){
-		document.getElementById('formImage').click();
-	}
-
-	$scope.upload = function(element) {
-      	$http({
-		  method  : 'POST',
-		  url     : '/api/v1/upload/avatar',
-		  processData: false,
-		  transformRequest: function (data) {
-		      var formData = new FormData();
-		      formData.append("avatar", element.files[0]);  
-		      return formData;  
-		  },  
-		  headers: {
-		        'Content-Type': undefined
-		  }
-	   }).then(function(data){
-	        console.log(data);
-	   });
-
-    };
-
-    $scope.uploaded = function(element) {
-	    var reader = new FileReader();
-
-	    reader.onload = function(event) {
-	      	$scope.image_source = event.target.result
-	    }
-     	reader.readAsDataURL(element.files[0]);
-     	$scope.upload(element);
-	}
-
-	$scope.update = function(){
-		if($scope.fields.user.password && $scope.fields.user.password != $scope.fields.user.password2){
-			toastr.warning('กรุณายืนยันรหัสผ่าน', 'User Settings');
-			return;
-		}
-		User.update($scope.fields.user.id, $scope.fields, function(response){
-			toastr.success('บันทึกข้อมูลสำเร็จ', 'User Settings');
-		}, function(error){
-			console.log('error',error);
-		});
-	}
-
-	if(!Auth.checkIfLoggedIn()){
-		$location.path('/auth/login');
-	}
-
-}]);
-app.controller('AnnoucementsController', ['$scope', '$location', 'Auth', 'Utils', 'Annoucement', 'toastr', 
-	function ($scope, $location, Auth, Utils, Annoucement, toastr) {
-
-	$scope.currentPage = 1;
-	$scope.numPerPage = 10;
-	$scope.maxSize = 5;
-
-	$scope.dataLists = {
-		annoucements:[]
-	};
-
-	$scope.fields = {};
-
-	$scope.keyword = '';
-	$scope.loadData = function(){
-		$scope.fields = {}
-		$scope.$watch('currentPage + numPerPage', function() {
-			var begin = (($scope.currentPage - 1) * $scope.numPerPage);
-			var end = $scope.numPerPage;
-			var criteria = {skip:begin, limit:end, keyword:$scope.keyword};
-			Annoucement.getItems(criteria, function(response){
-				$scope.dataLists.annoucements = response;
-				$scope.total = response.resultmeta.total;
-			}, function(error){
-				console.log(error);
-			});
-		});
-	}
-
-  	$scope.numPages = function () {
-    	return Math.ceil($scope.total / $scope.numPerPage);
-  	};
-
-  	$scope.toggleStatus = function(item){
-		if(item.active){
-			item.active = false;
-		}
-		else{
-			item.active = true;
-		}
-	}
-
-  	$scope.search = function(keyword){
-		$scope.keyword = keyword;
-		$scope.loadData();
-	}
-
-	
-	$scope.Remove = function (list, item) {
-	    var index = list.indexOf(item);
-	    list.splice(index, 1);
-	};
-
-	$scope.add = function(){
-		$scope.fields = {};
-		$('#manageAnnoucementModal').modal('toggle');
-	}
-	
-	$scope.edit = function(item){
-		$scope.fields.annoucement = item;
-		$('#manageAnnoucementModal').modal('toggle');
-	}
-
-	$scope.save = function(){
-		if($scope.fields.annoucement.id){
-			Annoucement.update($scope.fields.annoucement.id, $scope.fields, function(response){
-				toastr.success('บันทึกข้อมูลสำเร็จ', 'Annoucement Update');
-				$scope.loadData();
-			}, function(error){
-				console.log('error',error);
-			});
-		}
-		else{
-			Annoucement.save($scope.fields, function(response){
-				toastr.success('บันทึกข้อมูลสำเร็จ', 'Annoucement Settings');
-				$scope.loadData();
-			}, function(error){
-				console.log(error);
-			});
-		}
-
-		$('#manageAnnoucementModal').modal('toggle');
-	}
-
-	if(!Auth.checkIfLoggedIn()){
-		$location.path('/auth/login');
-	}
-
-	$scope.search();
-
-}]);
-app.controller('SettingsUsersController', ['$scope', '$location', 'Auth', 'Role', 'User', 'toastr', 
-	function ($scope, $location, Auth, Role, User, toastr) {
-
-	$scope.currentPage = 1;
-	$scope.numPerPage = 10;
-	$scope.maxSize = 5;
-
-	$scope.dataLists = {
-		users:[],
-		roles:[]
-	};
-
-	$scope.fields = {};
-
-	Role.getItems(function(response){
-		$scope.dataLists.roles = response;
-	}, function(error){
-		console.log(error);
-	});
-
-	$scope.keyword = '';
-	$scope.loadData = function(){
-		$scope.fields = {}
-		$scope.$watch('currentPage + numPerPage', function() {
-			var begin = (($scope.currentPage - 1) * $scope.numPerPage);
-			var end = $scope.numPerPage;
-			var criteria = {skip:begin, limit:end, keyword:$scope.keyword};
-			User.getItems(criteria, function(response){
-				$scope.dataLists.users = response;
-				$scope.total = response.resultmeta.total;
-			}, function(error){
-				console.log(error);
-			});
-		});
-	}
-
-  	$scope.numPages = function () {
-    	return Math.ceil($scope.total / $scope.numPerPage);
-  	};
-	
-	$scope.search = function(keyword){
-		$scope.keyword = keyword;
-		$scope.loadData();
-	}
-	
-	$scope.toggleStatus = function(item){
-		if(item.active){
-			item.active = false;
-		}
-		else{
-			item.active = true;
-		}
-	}
-
-	$scope.Remove = function (list, item) {
-	    var index = list.indexOf(item);
-	    list.splice(index, 1);
-	};
-
-	$scope.add = function(){
-		$scope.fields = {};
-		$('#manageUserModal').modal('toggle');
-	}
-
-	$scope.edit = function(user){
-		$scope.fields.user = user;
-		$scope.fields.roles = user.roles.map(function(item) {
-		    return item['id'];
-		});
-		$('#manageUserModal').modal('toggle');
-	}
-
-	$scope.save = function(){
-		if($scope.fields.user.id){
-			$scope.fields.action = 'update_user';
-			User.update($scope.fields.user.id, $scope.fields, function(response){
-				toastr.success('บันทึกข้อมูลสำเร็จ', 'User Settings');
-			}, function(error){
-				console.log('error',error);
-			});
-		}
-		else{
-			User.save($scope.fields, function(response){
-				toastr.success('บันทึกข้อมูลสำเร็จ', 'User Settings');
-				$scope.loadData();
-			}, function(error){
-				console.log(error);
-			});
-		}
-
-		$('#manageUserModal').modal('toggle');
-		$scope.loadData();
-	}
-
-	if(!Auth.checkIfLoggedIn()){
-		$location.path('/auth/login');
-	}
-
-	$scope.search();
 
 }]);
 app.factory('Annoucement', ['Restangular', 'Auth', function(Restangular, Auth) {
