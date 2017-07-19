@@ -74387,7 +74387,8 @@ app.controller('AnnoucementsController', ['$scope', '$location', 'Auth', 'Utils'
 	$scope.save = function(){
 		if($scope.fields.annoucement.id){
 			Annoucement.update($scope.fields.annoucement.id, $scope.fields, function(response){
-				toastr.success('บันทึกข้อมูลสำเร็จ', 'Annoucement Settings');
+				toastr.success('บันทึกข้อมูลสำเร็จ', 'Annoucement Update');
+				$scope.loadData();
 			}, function(error){
 				console.log('error',error);
 			});
@@ -74402,7 +74403,6 @@ app.controller('AnnoucementsController', ['$scope', '$location', 'Auth', 'Utils'
 		}
 
 		$('#manageAnnoucementModal').modal('toggle');
-		$scope.loadData();
 	}
 
 	if(!Auth.checkIfLoggedIn()){
